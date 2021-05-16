@@ -2,6 +2,10 @@
 
 Give your weapon an ability to shoot grenades
 
+Example video:
+
+https://youtu.be/rKRjHAN17qs
+
 
 # Commands:
 
