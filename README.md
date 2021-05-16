@@ -5,9 +5,9 @@ Give your weapon an ability to shoot grenades
 
 # Commands:
 
-sm_grenadeweapon (
+sm_grenadeweapon (root)
 
-sm_gw
+sm_gw (root)
 
 
 
