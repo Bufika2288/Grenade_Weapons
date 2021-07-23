@@ -52,11 +52,17 @@
 #define SOUND10 "weapons/molotov/fire_loop_1"
 
 
-bool g_bAccess[MAXPLAYERS + 1];
-Handle sm_enable_gweapon = INVALID_HANDLE;
-Handle sm_grenade_w = INVALID_HANDLE;
+bool gb_Molotov[MAXPLAYERS+1];
+bool gb_Flash[MAXPLAYERS+1];
+bool gb_Heg[MAXPLAYERS+1];
+bool gb_Enabled[MAXPLAYERS+1];
 
-char g_sGrenadeType[45];
+Handle sm_enable_gweapon = INVALID_HANDLE;
+//Handle sm_grenade_w = INVALID_HANDLE;
+
+Menu g_GrenadeMain = null;
+
+//char g_sGrenadeType[45];
 
 public Plugin myinfo = 
 {
@@ -70,8 +76,9 @@ public Plugin myinfo =
 public void OnPluginStart()
 {
 	//Commands
-	RegConsoleCmd("sm_grenadeweapon", Molotov_Weapon, "Change your weapon to a molotov weapon", ADMFLAG_ROOT);
-	RegConsoleCmd("sm_gw", Molotov_Weapon, "Change your weapon to a molotov weapon", ADMFLAG_ROOT);
+	RegConsoleCmd("sm_grenadeweapon", Grenade_Chooser, "Change your weapon to a molotov weapon", ADMFLAG_ROOT);
+	RegConsoleCmd("sm_gw", Grenade_Chooser, "Enable/Disable grenade shooting", ADMFLAG_ROOT);
+	RegConsoleCmd("sm_gc", Grenade_Chooser, "Choose Grenade to shoot", ADMFLAG_ROOT);
 	
 	//Event Hooks
 	HookEvent("bullet_impact", Event_BulletImpact);
@@ -79,7 +86,6 @@ public void OnPluginStart()
 	//Cvars
 	CreateConVar("sm_gw_version", PLUGIN_VERSION, "Plugin Version", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
 	sm_enable_gweapon = CreateConVar("sm_enable_gweapon", "1", "Enable the plugin");
-	sm_grenade_w = CreateConVar("sm_grenade_w", "molotov", "Accepted grenade types: flash, heg, molotov");
 	
 }
 public void OnMapStart()
@@ -119,29 +125,38 @@ public void OnMapStart()
 	PrecacheSound(SOUND8);
 	PrecacheSound(SOUND9);
 	PrecacheSound(SOUND10);
-	
 }
 
 public void OnClientPostAdminCheck(int client)
 {
-	g_bAccess[client] = false;
-
+	gb_Enabled[client] = false;
+	g_GrenadeMain = BuildGrenadeMenu(client);
+	gb_Molotov[client] = false;
+	gb_Heg[client] = false;
+	gb_Flash[client] = true;
 }
 
-public Action Molotov_Weapon(int client, int args)
+
+public Action Grenade_Chooser(int client, int args)
+{
+	g_GrenadeMain.Display(client, MENU_TIME_FOREVER);
+
+}
+	
+public Action Grenade_Weapon(int client, int args)
 {
 	if (GetConVarBool(sm_enable_gweapon))
 	{	
 		
-		if (g_bAccess[client] == false)
+		if (gb_Enabled[client] == false)
 		{
-			g_bAccess[client] = true;
+			gb_Enabled[client] = true;
 			PrintToChat(client, "[SM]\01 You \04enabled\01 Grenade bullets!");
 	
 		} 
 		else 
 		{
-			g_bAccess[client] = false;
+			gb_Enabled[client] = false;
 			PrintToChat(client, "[SM]\01 You \02disabled\01 Grenade bullets!");	
 
 		}
@@ -156,9 +171,8 @@ public Action Event_BulletImpact(Event event, const char[] name, bool dontBroadc
 {
 	
 	int client = GetClientOfUserId(event.GetInt("userid"));
-	if (g_bAccess[client] == true)
+	if (gb_Enabled[client] == true)
 	{
-		//int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 		float pos[3];
 		pos[0] = event.GetFloat("x");
 		pos[1] = event.GetFloat("y");
@@ -181,9 +195,8 @@ public void Hook_WeaponSwitch(int client, int weapon)
 
 void Spawn_Molotov(float pos[3],int client)
 {
-	GetConVarString(sm_grenade_w, g_sGrenadeType, sizeof(g_sGrenadeType));
 	
-	if (StrEqual(g_sGrenadeType, "heg", true))
+	if (gb_Heg[client] == true)
 	{
 		int heg = CreateEntityByName("hegrenade_projectile");
 		SetEntPropEnt(heg, Prop_Data, "m_hThrower", client);
@@ -197,7 +210,7 @@ void Spawn_Molotov(float pos[3],int client)
 
 	}
 	
-	else if (StrEqual(g_sGrenadeType, "molotov", true))
+	else if (gb_Molotov[client] == true)
 	{
 		int fire = CreateEntityByName("molotov_projectile");
 		SetEntPropEnt(fire, Prop_Data, "m_hThrower", client);
@@ -209,7 +222,7 @@ void Spawn_Molotov(float pos[3],int client)
 
 	}
 	
-	else if (StrEqual(g_sGrenadeType, "flash", true))
+	else if (gb_Flash[client] == true)
 	{
 		int flash = CreateEntityByName("flashbang_projectile");
 		SetEntPropEnt(flash, Prop_Data, "m_hThrower", client);
@@ -221,23 +234,108 @@ void Spawn_Molotov(float pos[3],int client)
 
 	}
 	
-	/*else if (StrEqual(g_sGrenadeType, "smoke", true))
-	{ 
-		int smoke = CreateEntityByName("smokegrenade_projectile");
-		SetEntPropEnt(smoke, Prop_Data, "m_hThrower", client);
-		SetEntPropEnt(smoke, Prop_Send, "m_hOwnerEntity", client);
-		SetEntProp(smoke, Prop_Data, "m_iTeamNum", GetClientTeam(client)); 
-		TeleportEntity(smoke, pos, NULL_VECTOR, NULL_VECTOR);
-		SetEntProp(smoke, Prop_Data, "m_nNextThinkTick", 9999); 
-		DispatchSpawn(smoke);
-		
-	}*/
 	else 
 	{
-		LogError("Cvar: sm_grenade_w Error: Invalid Entity name \"%s\"", g_sGrenadeType);
+		LogError("Unknown error");
 	}
 	
 }
+
+Menu BuildGrenadeMenu(int client)
+{
+	char buffer[128];
+	char buffer2[128];
+	char buffer3[128];
+	Menu menu = new Menu(GrenadeMenu);
+
+	Format(buffer, sizeof(buffer), "Molotov");
+	Format(buffer2, sizeof(buffer2), "%s", gb_Molotov[client] ? "[X]":"");
+	Format(buffer3, sizeof(buffer3), "%s %s", buffer, buffer2);
+	menu.AddItem("Molotov", buffer3);
+	
+	Format(buffer, sizeof(buffer), "Heg");
+	Format(buffer2, sizeof(buffer2), "%s", gb_Heg[client] ? "[X]":"");
+	Format(buffer3, sizeof(buffer3), "%s %s", buffer, buffer2);
+	menu.AddItem("Heg", buffer3);
+	
+	
+	Format(buffer, sizeof(buffer), "Flash");
+	Format(buffer2, sizeof(buffer2), "%s", gb_Flash[client] ? "[X]":"");
+	Format(buffer3, sizeof(buffer3), "%s %s", buffer, buffer2);
+	menu.AddItem("Flash", buffer3);
+	
+	
+	
+	Format(buffer, sizeof(buffer), "Grenade Shooting");
+	Format(buffer2, sizeof(buffer2), "%s", gb_Enabled[client] ? "On":"Off");
+	Format(buffer3, sizeof(buffer3), "%s %s", buffer, buffer2);
+	menu.AddItem("Grenade Shooting", buffer3);
+	
+	
+	
+	menu.SetTitle("Grenade Weapon");
+	menu.Pagination = 8;
+	
+	return menu;
+}
+
+public int GrenadeMenu(Menu menu, MenuAction action, int client, int param2)
+{
+	if(action == MenuAction_Select)
+	{
+		char items[32];	
+		menu.GetItem(param2, items, sizeof(items));
+		
+		if (StrEqual(items, "Molotov")) 
+		{
+			gb_Molotov[client] = true;
+			gb_Heg[client] = false;
+			gb_Flash[client] = false;
+		}
+		
+		if (StrEqual(items, "Heg")) 
+		{
+			gb_Molotov[client] = false;
+			gb_Heg[client] = true;
+			gb_Flash[client] = false;
+		}
+		
+		if (StrEqual(items, "Flash")) 
+		{
+			gb_Molotov[client] = false;
+			gb_Heg[client] = false;
+			gb_Flash[client] = true;
+		}
+		
+		if (StrEqual(items, "Grenade Shooting")) 
+		{
+			if (gb_Enabled[client] == false)
+			{
+				gb_Enabled[client] = true;
+				PrintToChat(client, "[SM]\01 You \04enabled\01 Grenade bullets!");
+		
+			} 
+			else 
+			{
+				gb_Enabled[client] = false;
+				gb_Molotov[client] = false;
+				gb_Heg[client] = false;
+				gb_Flash[client] = false;
+				PrintToChat(client, "[SM]\01 You \02disabled\01 Grenade bullets!");	
+	
+			}
+		}
+		g_GrenadeMain = BuildGrenadeMenu(client);
+		g_GrenadeMain.Display(client, MENU_TIME_FOREVER);
+	}
+}
+		
+		
+		
+		
+		
+		
+
 //Prechache particles
 stock void PrecacheEffect(const char[] sEffectName)
 {
