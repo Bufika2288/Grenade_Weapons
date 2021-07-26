@@ -2,7 +2,7 @@
 
 Give your weapon an ability to shoot grenades
 
-Example video:
+Example video (the video is outdated see changelog):
 
 https://youtu.be/rKRjHAN17qs
 
@@ -13,17 +13,16 @@ sm_grenadeweapon (root)
 
 sm_gw (root)
 
+sm_gc (root)
+
 
 
 # Cvars:
  
 sm_gw_version (Plugin Version)
 
-sm_enable_gweapon (Enable/disable the plugin)
-
-sm_grenade_w (Grenade type to spawn Accepted grenade types: flash, heg, molotov)
-
 
 # Change log:
 
+- Added a menu to turn on/off and choose grenades to shoot
 - Fixed grenades spawning in the ground
