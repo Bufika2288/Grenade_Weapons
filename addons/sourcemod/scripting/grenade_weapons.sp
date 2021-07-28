@@ -57,12 +57,9 @@ bool gb_Flash[MAXPLAYERS+1];
 bool gb_Heg[MAXPLAYERS+1];
 bool gb_Enabled[MAXPLAYERS+1];
 
-Handle sm_enable_gweapon = INVALID_HANDLE;
-//Handle sm_grenade_w = INVALID_HANDLE;
 
 Menu g_GrenadeMain = null;
 
-//char g_sGrenadeType[45];
 
 public Plugin myinfo = 
 {
@@ -85,7 +82,6 @@ public void OnPluginStart()
 	
 	//Cvars
 	CreateConVar("sm_gw_version", PLUGIN_VERSION, "Plugin Version", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
-	sm_enable_gweapon = CreateConVar("sm_enable_gweapon", "1", "Enable the plugin");
 	
 }
 public void OnMapStart()
@@ -133,7 +129,7 @@ public void OnClientPostAdminCheck(int client)
 	g_GrenadeMain = BuildGrenadeMenu(client);
 	gb_Molotov[client] = false;
 	gb_Heg[client] = false;
-	gb_Flash[client] = true;
+	gb_Flash[client] = false;
 }
 
 
@@ -143,30 +139,6 @@ public Action Grenade_Chooser(int client, int args)
 
 }
 	
-public Action Grenade_Weapon(int client, int args)
-{
-	if (GetConVarBool(sm_enable_gweapon))
-	{	
-		
-		if (gb_Enabled[client] == false)
-		{
-			gb_Enabled[client] = true;
-			PrintToChat(client, "[SM]\01 You \04enabled\01 Grenade bullets!");
-	
-		} 
-		else 
-		{
-			gb_Enabled[client] = false;
-			PrintToChat(client, "[SM]\01 You \02disabled\01 Grenade bullets!");	
-
-		}
-	}
-	else
-	{
-		ReplyToCommand(client, "[SM] This plugin is \02disabled.");
-	}
-}
-
 public Action Event_BulletImpact(Event event, const char[] name, bool dontBroadcast)
 {
 	
