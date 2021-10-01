@@ -156,6 +156,8 @@ public Action Event_BulletImpact(Event event, const char[] name, bool dontBroadc
 	
 }
 
+
+
 public void Hook_WeaponSwitch(int client, int weapon)
 {
 	if (weapon == -1)
